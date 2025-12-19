@@ -118,7 +118,7 @@ class ContactCard extends StatelessWidget {
                                   .textTheme
                                   .labelMedium
                                   ?.color
-                                  ?.withOpacity(0.6),
+                                  ?.withValues(alpha: 0.6),
                             ),
                             const SizedBox(width: AppTheme.space1),
                             Text(
@@ -128,7 +128,7 @@ class ContactCard extends StatelessWidget {
                                         .textTheme
                                         .labelMedium
                                         ?.color
-                                        ?.withOpacity(0.6),
+                                        ?.withValues(alpha: 0.6),
                                   ),
                             ),
                             const SizedBox(width: AppTheme.space2),
@@ -140,7 +140,7 @@ class ContactCard extends StatelessWidget {
                                       .textTheme
                                       .labelMedium
                                       ?.color
-                                      ?.withOpacity(0.6),
+                                      ?.withValues(alpha: 0.6),
                                 ),
                           ),
                         ],
@@ -159,7 +159,7 @@ class ContactCard extends StatelessWidget {
   Widget _buildAvatar(BuildContext context) {
     return CircleAvatar(
       radius: AppTheme.avatarSize / 2,
-      backgroundColor: contact.connectionDegree.color.withOpacity(0.2),
+      backgroundColor: contact.connectionDegree.color.withValues(alpha: 0.2),
       foregroundColor: contact.connectionDegree.color,
       backgroundImage: contact.avatarUrl != null ? NetworkImage(contact.avatarUrl!) : null,
       child: contact.avatarUrl == null
@@ -181,10 +181,10 @@ class ContactCard extends StatelessWidget {
         vertical: AppTheme.space1,
       ),
       decoration: BoxDecoration(
-        color: contact.connectionDegree.color.withOpacity(0.1),
+        color: contact.connectionDegree.color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppTheme.radiusExtraLarge),
         border: Border.all(
-          color: contact.connectionDegree.color.withOpacity(0.3),
+          color: contact.connectionDegree.color.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -207,7 +207,7 @@ class ContactCard extends StatelessWidget {
   }) {
     return Container(
       alignment: alignment,
-      color: color.withOpacity(0.1),
+      color: color.withValues(alpha: 0.1),
       padding: const EdgeInsets.symmetric(horizontal: AppTheme.space5),
       child: Column(
         mainAxisSize: MainAxisSize.min,

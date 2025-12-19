@@ -49,7 +49,7 @@ class SkillsTab extends StatelessWidget {
           Icon(
             Icons.stars_outlined,
             size: 64,
-            color: Theme.of(context).primaryColor.withOpacity(0.3),
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
           Text(
@@ -93,7 +93,7 @@ class SkillsTab extends StatelessWidget {
   ) {
     final backgroundColor = isTopSkill
         ? Theme.of(context).primaryColor
-        : Theme.of(context).primaryColor.withOpacity(0.1);
+        : Theme.of(context).primaryColor.withValues(alpha: 0.1);
 
     final textColor = isTopSkill ? Colors.white : Theme.of(context).primaryColor;
 
@@ -116,8 +116,8 @@ class SkillsTab extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: isTopSkill
-                      ? Colors.white.withOpacity(0.3)
-                      : Theme.of(context).primaryColor.withOpacity(0.2),
+                      ? Colors.white.withValues(alpha: 0.3)
+                      : Theme.of(context).primaryColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(

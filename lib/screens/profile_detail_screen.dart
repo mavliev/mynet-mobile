@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../providers/profile_provider.dart';
 import '../widgets/profile_header.dart';
@@ -10,7 +10,7 @@ import '../widgets/skills_tab.dart';
 import '../widgets/notes_tab.dart';
 
 /// Profile Detail Screen with tabbed layout
-class ProfileDetailScreen extends StatefulWidget {
+class ProfileDetailScreen extends ConsumerStatefulWidget {
   final String profileId;
   final String? heroTag;
 
@@ -21,188 +21,180 @@ class ProfileDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<ProfileDetailScreen> createState() => _ProfileDetailScreenState();
+  ConsumerState<ProfileDetailScreen> createState() => _ProfileDetailScreenState();
 }
 
-class _ProfileDetailScreenState extends State<ProfileDetailScreen>
+class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  late ProfileProvider _provider;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
-    _provider = ProfileProvider();
-    _provider.loadAllData(widget.profileId);
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _provider.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: _provider,
-      child: Scaffold(
-        body: Consumer<ProfileProvider>(
-          builder: (context, provider, child) {
-            if (provider.isLoadingProfile) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            }
+    final profileAsync = ref.watch(linkedInProfileProvider(widget.profileId));
 
-            if (provider.hasError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline,
-                        size: 48, color: Colors.red),
-                    const SizedBox(height: 16),
-                    Text(provider.error ?? 'An error occurred'),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () =>
-                          provider.loadAllData(widget.profileId),
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              );
-            }
+    return Scaffold(
+      body: profileAsync.when(
+        data: (profile) {
+          if (profile == null) {
+            return const Center(
+              child: Text('Profile not found'),
+            );
+          }
 
-            final profile = provider.profile;
-            if (profile == null) {
-              return const Center(
-                child: Text('Profile not found'),
-              );
-            }
+          return _buildProfileContent(profile);
+        },
+        loading: () => const Center(
+          child: CircularProgressIndicator(),
+        ),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: Colors.red),
+              const SizedBox(height: 16),
+              Text('Error: $error'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  ref.invalidate(linkedInProfileProvider(widget.profileId));
+                },
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: _buildFAB(),
+    );
+  }
 
-            return CustomScrollView(
-              slivers: [
-                // App Bar with back button and menu
-                SliverAppBar(
-                  pinned: true,
-                  expandedHeight: 0,
-                  leading: IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                  title: Text(profile.fullName),
-                  actions: [
-                    PopupMenuButton<String>(
-                      onSelected: (value) => _handleMenuAction(value),
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'edit',
-                          child: Row(
-                            children: [
-                              Icon(Icons.edit),
-                              SizedBox(width: 8),
-                              Text('Edit contact'),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'share',
-                          child: Row(
-                            children: [
-                              Icon(Icons.share),
-                              SizedBox(width: 8),
-                              Text('Share contact'),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'export',
-                          child: Row(
-                            children: [
-                              Icon(Icons.download),
-                              SizedBox(width: 8),
-                              Text('Export to vCard'),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuDivider(),
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete, color: Colors.red),
-                              SizedBox(width: 8),
-                              Text('Delete contact',
-                                  style: TextStyle(color: Colors.red)),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-
-                // Profile Header
-                SliverToBoxAdapter(
-                  child: ProfileHeader(
-                    profile: profile,
-                    heroTag: widget.heroTag,
-                  ),
-                ),
-
-                // Action Buttons
-                SliverToBoxAdapter(
-                  child: _buildActionBar(profile),
-                ),
-
-                // Tab Bar
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _SliverAppBarDelegate(
-                    TabBar(
-                      controller: _tabController,
-                      isScrollable: false,
-                      labelColor: Theme.of(context).primaryColor,
-                      unselectedLabelColor: Colors.grey,
-                      indicatorColor: Theme.of(context).primaryColor,
-                      indicatorWeight: 2,
-                      tabs: const [
-                        Tab(text: 'Overview'),
-                        Tab(text: 'Experience'),
-                        Tab(text: 'Education'),
-                        Tab(text: 'Skills'),
-                        Tab(text: 'Notes'),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Tab Content
-                SliverFillRemaining(
-                  child: TabBarView(
-                    controller: _tabController,
+  Widget _buildProfileContent(profile) {
+    return CustomScrollView(
+      slivers: [
+        // App Bar with back button and menu
+        SliverAppBar(
+          pinned: true,
+          expandedHeight: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: Text(profile.fullName),
+          actions: [
+            PopupMenuButton<String>(
+              onSelected: (value) => _handleMenuAction(value),
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
                     children: [
-                      OverviewTab(profile: profile),
-                      ExperienceTab(experience: profile.experience),
-                      EducationTab(
-                        education: profile.education,
-                        skills: profile.skills,
-                      ),
-                      SkillsTab(skills: profile.skills),
-                      const NotesTab(),
+                      Icon(Icons.edit),
+                      SizedBox(width: 8),
+                      Text('Edit contact'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'share',
+                  child: Row(
+                    children: [
+                      Icon(Icons.share),
+                      SizedBox(width: 8),
+                      Text('Share contact'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'export',
+                  child: Row(
+                    children: [
+                      Icon(Icons.download),
+                      SizedBox(width: 8),
+                      Text('Export to vCard'),
+                    ],
+                  ),
+                ),
+                const PopupMenuDivider(),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Delete contact',
+                          style: TextStyle(color: Colors.red)),
                     ],
                   ),
                 ),
               ],
-            );
-          },
+            ),
+          ],
         ),
-        floatingActionButton: _buildFAB(),
-      ),
+
+        // Profile Header
+        SliverToBoxAdapter(
+          child: ProfileHeader(
+            profile: profile,
+            heroTag: widget.heroTag,
+          ),
+        ),
+
+        // Action Buttons
+        SliverToBoxAdapter(
+          child: _buildActionBar(profile),
+        ),
+
+        // Tab Bar
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: _SliverAppBarDelegate(
+            TabBar(
+              controller: _tabController,
+              isScrollable: false,
+              labelColor: Theme.of(context).primaryColor,
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: Theme.of(context).primaryColor,
+              indicatorWeight: 2,
+              tabs: const [
+                Tab(text: 'Overview'),
+                Tab(text: 'Experience'),
+                Tab(text: 'Education'),
+                Tab(text: 'Skills'),
+                Tab(text: 'Notes'),
+              ],
+            ),
+          ),
+        ),
+
+        // Tab Content
+        SliverFillRemaining(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              OverviewTab(profile: profile),
+              const ExperienceTab(experience: []),
+              const EducationTab(
+                education: [],
+                skills: [],
+              ),
+              const SkillsTab(skills: []),
+              const NotesTab(),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

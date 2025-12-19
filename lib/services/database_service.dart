@@ -35,8 +35,6 @@ class DatabaseService {
       ByteData data = await rootBundle.load('assets/database/myNET.db');
       List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
       await File(path).writeAsBytes(bytes, flush: true);
-
-      print('Database copied from assets to $path');
     }
 
     // Open database
@@ -64,15 +62,14 @@ class DatabaseService {
   }
 
   /// Called when database is first created (for testing/fresh installs)
-  Future<void> _onCreate(Database db, int version) async {
+  Future<void> _createDB(Database db, int version) async {
     // Schema already exists in the database file from assets
-    // This is only called for testing scenarios
-    print('Database onCreate called - schema should already exist from assets');
+    // This is only called for testing scenarios when database doesn't exist
+    // In production, the database is copied from assets and already has schema
   }
 
   /// Called when database is opened - run migrations if needed
   Future<void> _onOpen(Database db) async {
-    print('Database opened successfully');
 
     // Check if migrations table exists
     final tables = await db.rawQuery(
@@ -93,15 +90,12 @@ class DatabaseService {
       if (result.isEmpty) {
         // Migration not applied yet
         await _runMigrations(db);
-      } else {
-        print('Schema migrations already applied');
       }
     }
   }
 
   /// Run database migrations from schema_extensions.sql
   Future<void> _runMigrations(Database db) async {
-    print('Running database migrations...');
 
     try {
       // Load migration SQL from assets
@@ -126,18 +120,13 @@ class DatabaseService {
             } catch (e) {
               // Ignore IF NOT EXISTS errors and continue
               if (!e.toString().contains('already exists')) {
-                print('Error executing statement: $statement');
-                print('Error: $e');
                 rethrow;
               }
             }
           }
         }
       });
-
-      print('Database migrations completed successfully');
     } catch (e) {
-      print('Error running migrations: $e');
       rethrow;
     }
   }
@@ -307,7 +296,6 @@ class DatabaseService {
     final db = await database;
     await db.execute('VACUUM');
     await db.execute('ANALYZE');
-    print('Database optimized');
   }
 
   /// Get database file size in bytes

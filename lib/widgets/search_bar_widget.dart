@@ -67,13 +67,7 @@ class _SearchBarWidgetState extends ConsumerState<SearchBarWidget> {
 
     // Add to recent searches
     if (query.isNotEmpty) {
-      final recentSearches = ref.read(recentSearchesProvider);
-      if (!recentSearches.contains(query)) {
-        ref.read(recentSearchesProvider.notifier).state = [
-          query,
-          ...recentSearches.take(4),
-        ].toList();
-      }
+      ref.read(recentSearchesProvider.notifier).addSearch(query);
     }
 
     _focusNode.unfocus();
@@ -161,7 +155,7 @@ class _SearchBarWidgetState extends ConsumerState<SearchBarWidget> {
               borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -180,7 +174,7 @@ class _SearchBarWidgetState extends ConsumerState<SearchBarWidget> {
                               .textTheme
                               .labelMedium
                               ?.color
-                              ?.withOpacity(0.6),
+                              ?.withValues(alpha: 0.6),
                         ),
                   ),
                 ),
@@ -193,8 +187,7 @@ class _SearchBarWidgetState extends ConsumerState<SearchBarWidget> {
                     trailing: IconButton(
                       icon: const Icon(Icons.close, size: 18),
                       onPressed: () {
-                        final updated = recentSearches.where((s) => s != search).toList();
-                        ref.read(recentSearchesProvider.notifier).state = updated;
+                        ref.read(recentSearchesProvider.notifier).removeSearch(search);
                       },
                       tooltip: 'Remove',
                     ),
@@ -203,7 +196,7 @@ class _SearchBarWidgetState extends ConsumerState<SearchBarWidget> {
                 if (recentSearches.length > 5)
                   TextButton(
                     onPressed: () {
-                      ref.read(recentSearchesProvider.notifier).state = [];
+                      ref.read(recentSearchesProvider.notifier).clearAll();
                     },
                     child: const Text('Clear all'),
                   ),

@@ -7,10 +7,6 @@ import '../models/connection.dart';
 import '../models/note.dart';
 import '../models/interaction.dart';
 import '../models/tag.dart';
-import '../repositories/profile_repository.dart';
-import '../repositories/note_repository.dart';
-import '../repositories/interaction_repository.dart';
-import '../repositories/tag_repository.dart';
 import 'database_provider.dart';
 
 // ==================== LinkedIn Profiles ====================

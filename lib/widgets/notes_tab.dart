@@ -69,7 +69,7 @@ class NotesTab extends StatelessWidget {
           Icon(
             Icons.note_add_outlined,
             size: 64,
-            color: Theme.of(context).primaryColor.withOpacity(0.3),
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
           Text(
@@ -327,7 +327,7 @@ class NotesTab extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: Theme.of(context)
                               .primaryColor
-                              .withOpacity(0.1),
+                              .withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(

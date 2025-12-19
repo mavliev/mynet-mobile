@@ -179,10 +179,10 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                           avatar: isSelected
                               ? null
                               : CircleAvatar(
-                                  backgroundColor: degree.color.withOpacity(0.2),
+                                  backgroundColor: degree.color.withValues(alpha: 0.2),
                                   radius: 8,
                                 ),
-                          selectedColor: degree.color.withOpacity(0.2),
+                          selectedColor: degree.color.withValues(alpha: 0.2),
                           checkmarkColor: degree.color,
                         );
                       }).toList(),
@@ -314,7 +314,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                   color: Theme.of(context).colorScheme.surface,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 4,
                       offset: const Offset(0, -2),
                     ),

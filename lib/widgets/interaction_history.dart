@@ -43,7 +43,7 @@ class _InteractionHistoryState extends State<InteractionHistory> {
           Icon(
             Icons.timeline,
             size: 64,
-            color: Theme.of(context).primaryColor.withOpacity(0.3),
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
           Text(
@@ -77,7 +77,7 @@ class _InteractionHistoryState extends State<InteractionHistory> {
                 height: 40,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Color(interaction.typeColor).withOpacity(0.2),
+                  color: Color(interaction.typeColor).withValues(alpha: 0.2),
                 ),
                 child: Center(
                   child: Text(
@@ -108,7 +108,7 @@ class _InteractionHistoryState extends State<InteractionHistory> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                   side: BorderSide(
-                    color: Color(interaction.typeColor).withOpacity(0.3),
+                    color: Color(interaction.typeColor).withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),

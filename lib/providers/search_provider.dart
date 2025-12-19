@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/contact.dart';
+import '../models/connection_degree.dart';
 
 // Search State Management
 
@@ -31,6 +33,66 @@ enum SearchType {
   notes,
   tags,
   companies,
+}
+
+// Sort Options
+enum SortOption {
+  nameAsc('Name (A-Z)'),
+  nameDesc('Name (Z-A)'),
+  recentFirst('Recently Added'),
+  companyAsc('Company (A-Z)');
+
+  final String label;
+  const SortOption(this.label);
+}
+
+// Filter State
+class FilterState {
+  final String? company;
+  final String? location;
+  final bool? isRecruiter;
+  final List<String> selectedTags;
+  final List<ConnectionDegree> connectionDegrees;
+
+  FilterState({
+    this.company,
+    this.location,
+    this.isRecruiter,
+    this.selectedTags = const [],
+    this.connectionDegrees = const [],
+  });
+
+  FilterState copyWith({
+    String? company,
+    String? location,
+    bool? isRecruiter,
+    List<String>? selectedTags,
+    List<ConnectionDegree>? connectionDegrees,
+  }) {
+    return FilterState(
+      company: company ?? this.company,
+      location: location ?? this.location,
+      isRecruiter: isRecruiter ?? this.isRecruiter,
+      selectedTags: selectedTags ?? this.selectedTags,
+      connectionDegrees: connectionDegrees ?? this.connectionDegrees,
+    );
+  }
+
+  bool get isActive =>
+      company != null || location != null || isRecruiter != null ||
+      selectedTags.isNotEmpty || connectionDegrees.isNotEmpty;
+
+  bool get hasActiveFilters => isActive;
+
+  int get activeFilterCount {
+    int count = 0;
+    if (company != null) count++;
+    if (location != null) count++;
+    if (isRecruiter != null) count++;
+    count += selectedTags.length;
+    count += connectionDegrees.length;
+    return count;
+  }
 }
 
 class SearchNotifier extends StateNotifier<SearchState> {
@@ -92,4 +154,41 @@ class RecentSearchesNotifier extends StateNotifier<List<String>> {
 
 final recentSearchesProvider = StateNotifierProvider<RecentSearchesNotifier, List<String>>((ref) {
   return RecentSearchesNotifier();
+});
+
+// ==================== Additional Providers for Home Screen ====================
+
+// Search query provider
+final searchQueryProvider = StateProvider<String>((ref) => '');
+
+// Filter state provider
+final filterStateProvider = StateProvider<FilterState>((ref) => FilterState());
+
+// Sort option provider
+final sortOptionProvider = StateProvider<SortOption>((ref) => SortOption.nameAsc);
+
+// Loading state provider
+final isLoadingProvider = StateProvider<bool>((ref) => false);
+
+// Filtered contacts provider
+final filteredContactsProvider = Provider<List<Contact>>((ref) {
+  // This is a placeholder - in a real app, this would filter contacts from a data source
+  // For now, return empty list
+  return [];
+});
+
+// Available filter options providers
+final availableCompaniesProvider = FutureProvider<List<String>>((ref) async {
+  // TODO: Fetch from database
+  return [];
+});
+
+final availableLocationsProvider = FutureProvider<List<String>>((ref) async {
+  // TODO: Fetch from database
+  return [];
+});
+
+final availableTagsProvider = FutureProvider<List<String>>((ref) async {
+  // TODO: Fetch from database
+  return [];
 });

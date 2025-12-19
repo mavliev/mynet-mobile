@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../models/connection_degree.dart';
@@ -282,15 +283,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     degrees.remove(degree);
                   }
                   ref.read(filterStateProvider.notifier).state =
-                      filterState.copyWith(connectionDegrees: degrees);
+                      filterState.copyWith(connectionDegrees: degrees.toList());
                 },
                 avatar: isSelected
                     ? null
                     : CircleAvatar(
-                        backgroundColor: degree.color.withOpacity(0.2),
+                        backgroundColor: degree.color.withValues(alpha: 0.2),
                         radius: 8,
                       ),
-                selectedColor: degree.color.withOpacity(0.2),
+                selectedColor: degree.color.withValues(alpha: 0.2),
                 checkmarkColor: degree.color,
               ),
             );
@@ -393,7 +394,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Icon(
               Icons.search_off,
               size: 64,
-              color: AppTheme.primary.withOpacity(0.3),
+              color: AppTheme.primary.withValues(alpha: 0.3),
             ),
             const SizedBox(height: AppTheme.space4),
             Text(
@@ -404,7 +405,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Text(
               'Try adjusting your filters or search query',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                    color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                   ),
             ),
             const SizedBox(height: AppTheme.space5),
@@ -428,7 +429,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Icon(
             Icons.contacts,
             size: 64,
-            color: AppTheme.primary.withOpacity(0.3),
+            color: AppTheme.primary.withValues(alpha: 0.3),
           ),
           const SizedBox(height: AppTheme.space4),
           Text(
@@ -439,7 +440,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Text(
             'Tap + to add your first contact',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                  color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                 ),
           ),
         ],
