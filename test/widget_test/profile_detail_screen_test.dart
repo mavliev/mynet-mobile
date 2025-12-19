@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mynet_mobile/screens/profile_detail_screen.dart';
+import 'package:toyounet/screens/profile_detail_screen.dart';
 
 void main() {
   group('ProfileDetailScreen Tests', () {

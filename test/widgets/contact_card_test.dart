@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mynet_mobile/models/connection_degree.dart';
-import 'package:mynet_mobile/models/contact.dart';
-import 'package:mynet_mobile/widgets/contact_card.dart';
+import 'package:toyounet/models/connection_degree.dart';
+import 'package:toyounet/models/contact.dart';
+import 'package:toyounet/widgets/contact_card.dart';
 
 void main() {
   group('ContactCard Widget Tests', () {

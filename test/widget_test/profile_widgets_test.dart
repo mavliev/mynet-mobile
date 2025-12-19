@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mynet_mobile/models/profile.dart';
-import 'package:mynet_mobile/widgets/experience_tab.dart';
-import 'package:mynet_mobile/widgets/education_tab.dart';
-import 'package:mynet_mobile/widgets/skills_tab.dart';
+import 'package:toyounet/models/profile.dart';
+import 'package:toyounet/widgets/experience_tab.dart';
+import 'package:toyounet/widgets/education_tab.dart';
+import 'package:toyounet/widgets/skills_tab.dart';
 
 void main() {
   group('ExperienceTab Tests', () {

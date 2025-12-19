@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:mynet_mobile/main.dart' as app;
+import 'package:toyounet/main.dart' as app;
 
 /// Integration test for the search flow
 void main() {
@@ -14,7 +14,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify home screen is displayed
-      expect(find.text('myNET'), findsOneWidget);
+      expect(find.text('ToYouNet'), findsOneWidget);
 
       // Verify initial contacts are displayed
       expect(find.text('Sarah Johnson'), findsOneWidget);

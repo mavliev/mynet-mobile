@@ -9,6 +9,7 @@ import '../theme/app_theme.dart';
 import '../widgets/contact_card.dart';
 import '../widgets/filter_bottom_sheet.dart';
 import '../widgets/search_bar_widget.dart';
+import 'settings_screen.dart';
 
 /// Main home screen with search and contact list
 class HomeScreen extends ConsumerStatefulWidget {
@@ -180,7 +181,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             );
           },
         ),
-        title: const Text('myNET'),
+        title: const Text('ToYouNet'),
         actions: [
           // Filter badge with count
           Stack(
@@ -218,13 +219,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           ),
           IconButton(
-            icon: const Icon(Icons.account_circle),
+            icon: const Icon(Icons.settings),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('User profile (not yet implemented)')),
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
               );
             },
-            tooltip: 'User profile',
+            tooltip: 'Settings',
           ),
         ],
       ),

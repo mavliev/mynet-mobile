@@ -1,14 +1,37 @@
 import 'dart:io';
-import 'package:flutter/services.dart';
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DatabaseService {
   static final DatabaseService instance = DatabaseService._init();
   static Database? _database;
+  static String? _currentDatabasePath;
 
   DatabaseService._init();
+
+  /// Get the currently configured database path from SharedPreferences
+  static Future<String?> getDatabasePath() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('database_path');
+  }
+
+  /// Set the database path in SharedPreferences
+  static Future<void> setDatabasePath(String path) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('database_path', path);
+  }
+
+  /// Clear the database path (reset to default)
+  static Future<void> clearDatabasePath() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('database_path');
+  }
+
+  /// Reload the database with a new path (closes current connection and reopens)
+  Future<void> reloadDatabase() async {
+    await close();
+    _database = await _initDB();
+  }
 
   /// Get database instance, initialize if needed
   Future<Database> get database async {
@@ -17,33 +40,51 @@ class DatabaseService {
     return _database!;
   }
 
-  /// Initialize database - copy from assets if first launch, run migrations
+  /// Initialize database - read from external storage path
   Future<Database> _initDB() async {
-    final Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    final String path = join(documentsDirectory.path, 'myNET.db');
+    // Get configured database path from SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    String? dbPath = prefs.getString('database_path');
 
-    // Check if database exists
-    final bool exists = await databaseExists(path);
+    // Default paths to try if no path is configured
+    if (dbPath == null || dbPath.isEmpty) {
+      // Try default external storage path first
+      dbPath = '/storage/emulated/0/ToYouJAN/myNET.db';
 
-    if (!exists) {
-      // Create directory if it doesn't exist
-      try {
-        await Directory(dirname(path)).create(recursive: true);
-      } catch (_) {}
-
-      // Copy database from assets
-      ByteData data = await rootBundle.load('assets/database/myNET.db');
-      List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-      await File(path).writeAsBytes(bytes, flush: true);
+      // If default doesn't exist, check for JAT.db
+      if (!await File(dbPath).exists()) {
+        final altPath = '/storage/emulated/0/ToYouJAN/JAT.db';
+        if (await File(altPath).exists()) {
+          dbPath = altPath;
+        }
+      }
     }
 
-    // Open database
+    // Store the current path being used
+    _currentDatabasePath = dbPath;
+
+    // Check if database file exists at the specified path
+    if (!await File(dbPath).exists()) {
+      throw Exception(
+        'Database file not found at: $dbPath\n\n'
+        'Please:\n'
+        '1. Place your database file at:\n   /storage/emulated/0/ToYouJAN/myNET.db\n'
+        '   or\n'
+        '   /storage/emulated/0/ToYouJAN/JAT.db\n\n'
+        '2. Or go to Settings and select a custom database file location.\n\n'
+        'Make sure storage permissions are granted.',
+      );
+    }
+
+    // Open database from external storage (read-only mode recommended for safety)
     final db = await openDatabase(
-      path,
+      dbPath,
       version: 1,
       onCreate: _createDB,
       onConfigure: _onConfigure,
       onOpen: _onOpen,
+      // Set to read-only if you want to prevent accidental modifications
+      // readOnly: true,
     );
 
     return db;
@@ -70,66 +111,28 @@ class DatabaseService {
 
   /// Called when database is opened - run migrations if needed
   Future<void> _onOpen(Database db) async {
-
-    // Check if migrations table exists
-    final tables = await db.rawQuery(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name='schema_migrations'",
-    );
-
-    if (tables.isEmpty) {
-      // First time opening - run schema extensions migration
-      await _runMigrations(db);
-    } else {
-      // Check current schema version
-      final result = await db.query(
-        'schema_migrations',
-        where: 'version = ?',
-        whereArgs: ['1.0.0'],
-      );
-
-      if (result.isEmpty) {
-        // Migration not applied yet
-        await _runMigrations(db);
-      }
-    }
-  }
-
-  /// Run database migrations from schema_extensions.sql
-  Future<void> _runMigrations(Database db) async {
-
+    // For external databases, we assume the schema is already correct
+    // No migrations needed since the database comes pre-configured
+    // If you need migrations for external databases, uncomment below:
+    /*
     try {
-      // Load migration SQL from assets
-      final String migrationSql = await rootBundle.loadString(
-        'assets/database/schema_extensions.sql',
+      // Check if migrations table exists
+      final tables = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='schema_migrations'",
       );
 
-      // Split by statement (simple approach - assumes ; at end of each statement)
-      // Note: This is a simplified version. For production, consider a more robust SQL parser
-      final List<String> statements = migrationSql
-          .split(';')
-          .map((s) => s.trim())
-          .where((s) => s.isNotEmpty && !s.startsWith('--'))
-          .toList();
-
-      // Execute each statement in a transaction
-      await db.transaction((txn) async {
-        for (final statement in statements) {
-          if (statement.trim().isNotEmpty) {
-            try {
-              await txn.execute(statement);
-            } catch (e) {
-              // Ignore IF NOT EXISTS errors and continue
-              if (!e.toString().contains('already exists')) {
-                rethrow;
-              }
-            }
-          }
-        }
-      });
+      if (tables.isEmpty) {
+        // First time opening - schema should already exist in external DB
+        print('Opening external database: ${_currentDatabasePath}');
+      }
     } catch (e) {
-      rethrow;
+      print('Database opened successfully: ${_currentDatabasePath}');
     }
+    */
   }
+
+  // Migration method removed - not needed for external databases
+  // External databases come pre-configured with correct schema
 
   /// Close database connection
   Future<void> close() async {
@@ -300,22 +303,29 @@ class DatabaseService {
 
   /// Get database file size in bytes
   Future<int> getDatabaseSize() async {
-    final Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    final String path = join(documentsDirectory.path, 'myNET.db');
-    final file = File(path);
-    if (await file.exists()) {
-      return await file.length();
+    if (_currentDatabasePath != null) {
+      final file = File(_currentDatabasePath!);
+      if (await file.exists()) {
+        return await file.length();
+      }
     }
     return 0;
   }
 
+  /// Get the current database file path being used
+  String? getCurrentDatabasePath() {
+    return _currentDatabasePath;
+  }
+
   /// Export database to file
   Future<String> exportDatabase(String targetPath) async {
-    final Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    final String sourcePath = join(documentsDirectory.path, 'myNET.db');
-    final sourceFile = File(sourcePath);
-
-    await sourceFile.copy(targetPath);
-    return targetPath;
+    if (_currentDatabasePath != null) {
+      final sourceFile = File(_currentDatabasePath!);
+      if (await sourceFile.exists()) {
+        await sourceFile.copy(targetPath);
+        return targetPath;
+      }
+    }
+    throw Exception('No database is currently loaded');
   }
 }
